@@ -1,10 +1,10 @@
 # History files
 .Rhistory
 .Rapp.history
+.Rprofile
 
 # Session Data files
 .RData
-.RDataTmp
 
 # User-specific files
 .Ruserdata
@@ -39,11 +39,52 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# pkgdown site
-docs/
 
-# translation temp files
-po/*~
 
-# RStudio Connect folder
-rsconnect/
+
+# Copied the below items from https://github.com/Sage-Bionetworks/GENIE_BPC/blob/main/.gitignore
+
+# ignore other types of data files
+*.xlsx
+*.xls
+*.csv
+*.dta
+*.sas7bdat
+*.sav
+*.txt
+
+# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
+.httr-oauth
+
+# ignore non-code files
+*.xlsx
+*.csv
+*.html
+*.docx
+*.pptx
+*.rdata
+*.pdf
+
+# ignore misc files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+~$*.rtf
+~$*.tmp
+Thumbs.db
+.DS_Store
+*.png
+
+# Packrat
+packrat/lib*/
+packrat/src/
+
+# renv
+renv/library/
+renv/python/
+renv/staging/
+
+# folders to ignore
+data
+data-raw
+analysis/report/.quarto
