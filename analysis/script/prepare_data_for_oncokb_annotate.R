@@ -1,5 +1,5 @@
 filter_to_high_amplifications_only <- T
-downsample_for_testing <- T 
+downsample_for_testing <- F
 
 library(purrr); library(here); library(fs)
 purrr::walk(.x = fs::dir_ls(here('R')), .f = source)
