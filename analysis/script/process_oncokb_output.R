@@ -152,7 +152,7 @@ onco_gene_feat %<>%
     )
   )
 
-onco_gene_feat %<>%
+onco_gene_feat <- onco_gene_feat %>%
   select(sample_id, hugo_symbol, feature) %>%
   pivot_wider(
     names_from = 'hugo_symbol',
@@ -214,15 +214,6 @@ samp_aug %<>%
   relocate(
     age_at_seq_report_mod, .after = age_at_seq_report
   )
-
-# This genomic dataset is positive/else only - no difference between NA and False for now
-samp_aug %<>%
-  mutate(
-    across(
-      .cols = -c(sample_id:year_death),
-      .fns = ~replace_na(.x, replace = F)
-    )
-  ) 
 
 readr::write_rds(
   samp_aug,
