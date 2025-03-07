@@ -70,25 +70,10 @@ sv <- left_join(
 
 # Spits out a message for each dataframe about the number of rows removed
 #  and returns the data with the rows removed.
-genomic_row_removed_helper <- function(dat) {
-  dat_name <- deparse(substitute(dat))
-  dat_nrow_pre <- nrow(dat)
-  dat %<>% filter(!is.na(ONCOTREE_CODE) &
-                    !(ONCOTREE_CODE %in% "UNKNOWN"))
-  
-  dat_nrow_post <- nrow(dat)
-  nrow_diff <- dat_nrow_pre-dat_nrow_post
-  nrow_diff_pct <- nrow_diff/dat_nrow_pre
-  cli::cli_alert_success(
-    "Removed {nrow_diff} rows ({round(nrow_diff_pct,0)}%) from {dat_name} filtering down to only samples with a complete (not 'UNKNOWN') oncotree code."
-  )
-  
-  return(dat)
-}
 
-mut <- genomic_row_removed_helper(mut)
-cna_long_selected <- genomic_row_removed_helper(cna_long_selected)
-sv <- genomic_row_removed_helper(sv)
+# mut <- genomic_row_removed_helper(mut)
+# cna_long_selected <- genomic_row_removed_helper(cna_long_selected)
+# sv <- genomic_row_removed_helper(sv)
 
 if (downsample_for_testing) {
   # choices here are totally heuristic.
