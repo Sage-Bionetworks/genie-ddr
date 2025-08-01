@@ -1,7 +1,9 @@
 filter_to_high_amplifications_only <- T
 downsample_for_testing <- F
 
-library(purrr); library(here); library(fs)
+library(purrr)
+library(here)
+library(fs)
 purrr::walk(.x = fs::dir_ls(here('R')), .f = source)
 
 path_geno <- here('data-raw', 'main_genie')
@@ -28,7 +30,7 @@ samp <- read_tsv(
 
 
 # The CNA file needs to be reshaped to be fed into the annotator the way I know how:
-cna_long_selected <- cna %>% 
+cna_long_selected <- cna %>%
   pivot_longer(
     cols = -Hugo_Symbol,
     names_to = "Tumor_Sample_Barcode", # just to match.
@@ -40,7 +42,7 @@ if (filter_to_high_amplifications_only) {
   # The only real reason to do this at this stage is saving
   #   time with the annotator script.
   cna_long_selected <- cna_long_selected %>%
-    filter(!is.na(value) & value >= 2) 
+    filter(!is.na(value) & value >= 2)
 }
 
 # For each of our three file types we will add in the oncotree code:
@@ -53,17 +55,20 @@ dft_otc <- samp %>%
 sv %<>% rename(Tumor_Sample_Barcode = Sample_Id)
 
 mut <- left_join(
-  mut, dft_otc, 
+  mut,
+  dft_otc,
   by = c('Tumor_Sample_Barcode'),
   relationship = "many-to-one"
 )
 cna_long_selected <- left_join(
-  cna_long_selected, dft_otc,
+  cna_long_selected,
+  dft_otc,
   by = c('Tumor_Sample_Barcode'),
   relationship = "many-to-one"
 )
 sv <- left_join(
-  sv, dft_otc,
+  sv,
+  dft_otc,
   by = c('Tumor_Sample_Barcode'),
   relationship = "many-to-one"
 )
@@ -83,7 +88,6 @@ if (downsample_for_testing) {
   cna_long_selected %<>% sample_frac(0.01)
   sv %<>% sample_frac(0.01)
 }
-  
 
 
 readr::write_tsv(
