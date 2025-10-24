@@ -36,11 +36,6 @@ any_ddr <- samp_aug_fs %>%
   magrittr::is_greater_than(., 0)
 samp_aug_fs %<>% mutate(any_ddr = any_ddr)
 
-samp_aug_fs %>% count(cancer_type)
-samp_aug_fs %>%
-  filter(cancer_type %in% "Bladder Cancer") %>%
-  count(oncotree_code)
-
 tumor_types <- mskcc.oncotree::get_tumor_types()
 samp_aug_fs %<>%
   left_join(
@@ -53,12 +48,16 @@ samp_aug_fs %<>%
   mutate(
     custom_cancer_type = case_when(
       oncotree_code %in% c("UNKNOWN", "CUP", "CUPNOS") ~ "Unknown",
-      oncotree_code %in% "UTUC" ~ "Bladder (upper tract)",
-      tissue %in% "Bladder/Urinary Tract" ~ "Bladder (not UT)",
+      # Three types for bladder:
+      oncotree_code %in% "UTUC" ~ "Bladder (UTUC)",
+      oncotree_code %in% "BLCA" ~ "Bladder (BLCA)",
+      tissue %in% "Bladder/Urinary Tract" ~ "Bladder (other)",
+      # For some reason glioma's dont have a tissue type...
+      # My fix is to use the cancer type for those, as much as I hate that.
+      is.na(tissue) ~ cancer_type,
       TRUE ~ tissue
     )
   )
-
 
 # We're losing some important groups doing this, but I want to see the plot:
 samp_aug_fs %<>%
@@ -72,13 +71,21 @@ samp_aug_fs %<>%
   group_by(custom_cancer_type) %>%
   mutate(n_ct = n()) %>%
   ungroup(.) %>%
+  # putting these in order with weird sorting so I don't have to mess with the n's later on:
+  arrange(
+    desc(str_detect(custom_cancer_type, "BLCA")),
+    desc(str_detect(custom_cancer_type, "UTUC")),
+    desc(str_detect(custom_cancer_type, "Bladder \\(other\\)")),
+    custom_cancer_type
+  )
+
+samp_aug_fs %<>%
   mutate(
     # leaving the paren open here on purpose:
     custom_cancer_type = glue('{custom_cancer_type} ({n_ct}'),
-    custom_cancer_type = factor(custom_cancer_type),
+    custom_cancer_type = fct_inorder(custom_cancer_type),
     custom_cancer_type = fct_rev(custom_cancer_type)
   )
-
 
 cts <- samp_aug_fs %>%
   group_by(custom_cancer_type) %>%
@@ -169,7 +176,7 @@ ggsave(
   gg_pos,
   height = 15,
   width = 10,
-  filename = here('output', 'fig', 'ddr_alt_custom_cancer_type.pdf')
+  filename = here('output', 'fig', '1A_fig_bladder_manu_main_genie_ddr_pos.pdf')
 )
 
 
@@ -204,5 +211,9 @@ ggsave(
   gg_test,
   height = 15,
   width = 10,
-  filename = here('output', 'fig', 'ddr_test_custom_cancer_type.pdf')
+  filename = here(
+    'output',
+    'fig',
+    'S1_fig_bladder_manu_main_genie_ddr_test.pdf'
+  )
 )
