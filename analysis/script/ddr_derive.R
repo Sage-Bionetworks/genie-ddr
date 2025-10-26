@@ -7,31 +7,11 @@ samp_aug_fs <- readr::read_rds(
   here('data', 'combined', 'samp_aug_first_sample.rds')
 )
 
-custom_ddr_list <- c(
-  'ERCC2',
-  'ERCC5',
-  'BRCA1',
-  'BRCA2',
-  'RECQL4',
-  'RAD51C',
-  'ATM',
-  'ATR',
-  'FANCC'
-) %>%
-  sort
-
-# Can check how often these were tested easily now:
-# samp_aug_fs %>%
-#   select(any_of(custom_ddr_list)) %>%
-#   purrr::map(
-#     .x = .,
-#     .f = ~sum(is.na(.x))
-#   )
 
 # We'll calculate this as a vector then put it back in.
 # rowSums() is just a huge pain with pipes, but it's fast.
 any_ddr <- samp_aug_fs %>%
-  select(any_of(custom_ddr_list)) %>%
+  select(any_of(custom_ddr_list())) %>%
   rowSums(., na.rm = T) %>%
   magrittr::is_greater_than(., 0)
 samp_aug_fs %<>% mutate(any_ddr = any_ddr)
@@ -92,8 +72,7 @@ cts <- samp_aug_fs %>%
   rename(ddr = any_ddr) %>%
   summarize(
     across(
-      .cols = c(any_of(custom_ddr_list), ddr),
-      # .cols = c(any_of(custom_ddr_list)),
+      .cols = c(any_of(custom_ddr_list()), ddr),
       .fns = list(
         # proportion of samples positive out of those tested:
         pos = \(x) {
@@ -150,28 +129,11 @@ cts_long %<>%
   ) %>%
   mutate(feature = fct_inorder(feature))
 
-gg_pos <- ggplot(
+gg_pos <- plot_ddr_heatmap(
   filter(cts_long, feature != "any_DDR"),
-  aes(x = feature, y = custom_cancer_type_pos_lab, fill = pos)
-) +
-  geom_tile(color = 'gray50') +
-  scale_fill_viridis_c(option = "magma", name = "Proportion altered") +
-  scale_y_discrete(position = 'right', expand = c(0, 0)) +
-  scale_x_discrete(position = 'top', expand = c(0, 0)) +
-  theme_bw() +
-  labs(
-    title = "Proportion of first samples altered by cancer type",
-    subtitle = "Denominator is the number of samples TESTED for individual genes"
-  ) +
-  theme(
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.ticks.y = element_blank(),
-    axis.text.x = element_text(angle = 0, hjust = 0.5),
-    legend.position = 'top'
-  )
-
+  plot_title = "Proportion of first samples altered by cancer type",
+  plot_subtitle = "Denominator is the number of samples TESTED for individual genes"
+)
 ggsave(
   gg_pos,
   height = 15,
