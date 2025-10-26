@@ -4,7 +4,7 @@ library(fs)
 purrr::walk(.x = fs::dir_ls(here('R')), .f = source)
 
 samp_aug_fs <- readr::read_rds(
-  here('data', 'combined', 'samp_aug_first_sample.rds')
+  here('data', 'combined', 'samp_aug_onco_first_sample.rds')
 )
 
 

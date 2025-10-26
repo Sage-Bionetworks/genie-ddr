@@ -66,16 +66,48 @@ onco_comb_mat <- combine_testing_and_alteration_matrices(
   onco_gene_feat_mat
 )
 
-rm(testing_mat)
 rm(onco_gene_feat_mat)
 gc()
 
 onco_gene_feat <- as_tibble(onco_comb_mat, rownames = "sample_id")
 
+samp_aug_onco <- left_join(
+  samp_aug_proto,
+  onco_gene_feat,
+  by = 'sample_id'
+)
 
-cli_abort("Works up to here with no memory issues.")
+readr::write_rds(
+  samp_aug_onco,
+  here('data', 'combined', 'samp_aug_onco.rds')
+)
 
-# here's a thought:  the drugs are listed under level of evidence.  could scan for cisplatin there.
+# fs = first sample
+samp_aug_onco_fs <- samp_aug_onco %>%
+  group_by(patient_id) %>%
+  # if there are ties for both year and age we'll just
+  #   pick arbitrarily (sample_id).
+  arrange(seq_year, age_at_seq_report_mod, sample_id) %>%
+  slice(1) %>%
+  ungroup(.)
+
+readr::write_rds(
+  samp_aug_onco_fs,
+  here('data', 'combined', 'samp_aug_onco_first_sample.rds')
+)
+
+rm(samp_aug_onco)
+rm(samp_aug_onco_fs)
+gc()
+
+
+#
+#
+#
+######################################
+# Repeat for non-oncogenic filtering #
+######################################
+
 any_gene_feat <- mut_onco %>%
   # No oncogenic filter at all here
   select(
@@ -90,12 +122,35 @@ rm(mut_onco) # large memory use - don't need it now.
 any_gene_feat_mat <- long_dat_to_mat_helper(any_gene_feat)
 any_gene_feat_mat[is.na(any_gene_feat_mat)] <- FALSE
 
+# Just doing the ddr genes for memory issues:
+any_gene_feat_mat <- any_gene_feat_mat[,
+  intersect(colnames(any_gene_feat_mat), custom_ddr_list())
+]
+testing_mat <- testing_mat[, custom_ddr_list()]
+any_comb_mat_ddr <- combine_testing_and_alteration_matrices(
+  testing_mat,
+  any_gene_feat_mat
+)
 
-onco_gene_feat <- onco_gene_feat %>%
-  select(sort(tidyselect::peek_vars())) %>%
-  select(sample_id, everything())
+rm(any_gene_feat_mat)
+rm(testing_mat)
+gc()
 
-samp_aug_first_sample <- samp_aug %>%
+any_gene_feat_ddr <- as_tibble(any_comb_mat_ddr, rownames = "sample_id")
+
+samp_aug_any_ddr <- left_join(
+  samp_aug_proto,
+  any_gene_feat_ddr,
+  by = 'sample_id'
+)
+
+readr::write_rds(
+  samp_aug_any_ddr,
+  here('data', 'combined', 'samp_aug_any_ddr.rds')
+)
+
+# fs = first sample
+samp_aug_any_ddr_fs <- samp_aug_any_ddr %>%
   group_by(patient_id) %>%
   # if there are ties for both year and age we'll just
   #   pick arbitrarily (sample_id).
@@ -104,75 +159,6 @@ samp_aug_first_sample <- samp_aug %>%
   ungroup(.)
 
 readr::write_rds(
-  samp_aug_first_sample,
-  here('data', 'combined', 'samp_aug_first_sample.rds')
-)
-
-
-cli_abort("stop")
-# Repeat those steps for the any_gene_feat version:
-
-any_gene_feat %<>%
-  full_join(
-    samp_skel,
-    .,
-    by = c('sample_id', 'hugo_symbol')
-  )
-
-any_gene_feat %<>%
-  replace_na(list(tested = F, altered = F))
-any_gene_feat %<>%
-  mutate(
-    feature = case_when(
-      altered ~ T, # including cases when untested, at least for now.
-      tested ~ F,
-      T ~ NA
-    )
-  )
-any_gene_feat <- any_gene_feat %>%
-  select(sample_id, hugo_symbol, feature) %>%
-  pivot_wider(
-    names_from = 'hugo_symbol',
-    values_from = feature
-  )
-any_gene_feat <- any_gene_feat %>%
-  select(sort(tidyselect::peek_vars())) %>%
-  select(sample_id, everything())
-
-
-samp_aug_onco <- left_join(
-  samp_aug_proto,
-  onco_gene_feat,
-  by = 'sample_id'
-)
-
-samp_aug_any <- left_join(
-  samp_aug_proto,
-  any_gene_feat,
-  by = 'sample_id'
-)
-
-
-readr::write_rds(
-  samp_aug_onco,
-  here('data', 'combined', 'samp_aug_onco.rds')
-)
-
-readr::write_rds(
-  samp_aug_onco,
-  here('data', 'combined', 'samp_aug_any.rds')
-)
-
-
-samp_aug_first_sample <- samp_aug %>%
-  group_by(patient_id) %>%
-  # if there are ties for both year and age we'll just
-  #   pick arbitrarily (sample_id).
-  arrange(seq_year, age_at_seq_report_mod, sample_id) %>%
-  slice(1) %>%
-  ungroup(.)
-
-readr::write_rds(
-  samp_aug_first_sample,
-  here('data', 'combined', 'samp_aug_first_sample.rds')
+  samp_aug_any_ddr,
+  here('data', 'combined', 'samp_aug_any_ddr_first_sample.rds')
 )
