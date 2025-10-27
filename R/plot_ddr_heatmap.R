@@ -4,14 +4,23 @@ plot_ddr_heatmap <- function(
   fill_col = 'pos',
   scale_name = 'Proportion altered',
   plot_title = NULL,
-  plot_subtitle = NULL
+  plot_subtitle = NULL,
+  vir_theme = 'magma',
+  vir_begin = 0,
+  vir_end = 1,
+  tile_color = 'gray50'
 ) {
   ggplot(
     dat_long,
     aes(x = feature, y = .data[[y_lab_col]], fill = .data[[fill_col]])
   ) +
-    geom_tile(color = 'gray50') +
-    scale_fill_viridis_c(option = "magma", name = scale_name) +
+    geom_tile(color = tile_color) +
+    scale_fill_viridis_c(
+      option = vir_theme,
+      begin = vir_begin,
+      end = vir_end,
+      name = scale_name
+    ) +
     scale_y_discrete(position = 'right', expand = c(0, 0)) +
     scale_x_discrete(position = 'top', expand = c(0, 0)) +
     theme_bw() +
